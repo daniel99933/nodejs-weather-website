@@ -1,7 +1,7 @@
 const request = require("request")
 
 const geocode = (address, callback) => {
-    const url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + encodeURIComponent(address) + ".json?access_token=pk.eyJ1IjoiZGFuaWVsMTAxMCIsImEiOiJja3lvOTZ0ZjUwdXkyMm9wM2lwcGd4dG91In0.NZsQmzW7Q9_7vONzF5SIfA&limit=1"
+    const url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + encodeURIComponent(address) + ".json?access_token=" + process.env.MAPBOX_TOKEN + "&limit=1"
 
     request({ url, json: true }, (error, { body }) => {
         if (error) {
@@ -18,4 +18,23 @@ const geocode = (address, callback) => {
     })
 }
 
-module.exports = geocode
+const reverseGeocode = (lat, long, callback) => {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(`${long},${lat}`)}.json?access_token=${process.env.MAPBOX_TOKEN}&limit=1`
+
+    request({ url, json: true }, (error, { body }) => {
+        if (!body.features[0].place_name) {
+            callback("The coords is invalid.", undefined)
+        } else {
+            callback(undefined, {
+                latitude: lat,
+                longitude: long,
+                location: body.features[0].place_name
+            })
+        }
+    })
+}
+
+module.exports = {
+    geocode,
+    reverseGeocode
+}

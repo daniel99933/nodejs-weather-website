@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js -e js,hbs"
+    "start": "env-cmd -f ./config/.env node src/app.js",
+    "dev": "env-cmd -f ./config/.env nodemon src/app.js -e js,hbs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "env-cmd": "^10.1.0",
     "express": "^4.16.4",
     "hbs": "^4.0.1",
     "request": "^2.88.0"

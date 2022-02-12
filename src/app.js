@@ -1,7 +1,7 @@
 const path = require("path")
 const express = require("express")
 const hbs = require("hbs")
-const geocode = require("./utils/geocode")
+const { geocode, reverseGeocode } = require("./utils/geocode")
 const forecast = require("./utils/forecast")
 
 const app = express()
@@ -43,29 +43,58 @@ app.get("/help", (req, res) => {
 })
 
 app.get("/weather", (req, res) => {
-    if (!req.query.address) {
+    if ((!req.query.address && !req.query.coord)) {
         return res.send({
-            error: "You must provide an address"
+            error: "You must provide an address or a coordinate"
+        })
+    } else if (req.query.address && req.query.coord) {
+        return res.send({
+            error: "You should provide either the address or the coordinate."
         })
     }
 
-    geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
-        if (error) {
-            return res.send({ error })
-        }
+    if (req.query.address) {
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+            if (error) {
+                return res.send({ error })
+            }
+    
+            forecast(latitude, longitude, (error, forecastData) => {
+                if (error) {
+                    return res.send({ error })
+                }
+    
+                res.send({
+                    forecast: forecastData,
+                    location,
+                    address: req.query.address
+                })
+            })
+        })
+    } else {
+        const coord = req.query.coord.split(",")
 
-        forecast(latitude, longitude, (error, forecastData) => {
+        reverseGeocode(coord[0], coord[1], (error, { location }) => {
             if (error) {
                 return res.send({ error })
             }
 
-            res.send({
-                forecast: forecastData,
-                location,
-                address: req.query.address
+            forecast(coord[0], coord[1], (error, forecastData) => {
+                if (error) {
+                    return res.send({ error })
+                }
+    
+                res.send({
+                    forecast: forecastData,
+                    location
+                })
             })
         })
-    })
+    }
+
+
+
+    
 })
 
 app.get("/products", (req, res) => {
